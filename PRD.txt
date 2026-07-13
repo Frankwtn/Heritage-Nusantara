@@ -46,7 +46,10 @@ B. Admin / Staf Restoran
 4.1 CUSTOMER SIDE (/menu?table=X)
 ------------------------------------
 - Tampilan menu dengan foto, nama, deskripsi, dan harga.
+- Search bar: cari menu berdasarkan nama atau deskripsi,
+  dengan result count dan tombol clear.
 - Filter kategori: All / Food / Drink / Dessert.
+  (Search dan filter bekerja bersamaan.)
 - Tambah item ke keranjang dengan kontrol qty per item.
 - Catatan (note) per item (contoh: "tidak pedas", "no onion").
 - Cart drawer: review pesanan sebelum submit.

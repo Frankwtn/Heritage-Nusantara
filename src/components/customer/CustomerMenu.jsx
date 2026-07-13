@@ -6,7 +6,7 @@ import {
   ShoppingCart, Plus, Minus, X, ChefHat,
   Loader2, AlertCircle, CheckCircle, UtensilsCrossed,
   ClipboardList, Send, Clock, ChefHat as CookIcon, Utensils,
-  CreditCard, ReceiptText,
+  CreditCard, ReceiptText, Search,
 } from 'lucide-react'
 
 // ── Status config ─────────────────────────────────────────────
@@ -528,7 +528,8 @@ export default function CustomerMenu() {
   const [menuItems, setMenuItems] = useState([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(null)
-  const [activeCategory, setActiveCategory] = useState('Semua')
+  const [activeCategory, setActiveCategory] = useState('All')
+  const [search, setSearch]               = useState('')
   const [cart, setCart]           = useState({})   // { [itemId]: { qty, note } }
   const [cartOpen, setCartOpen]   = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
@@ -578,10 +579,14 @@ export default function CustomerMenu() {
 
   const cartCount = Object.values(cart).reduce((a, { qty }) => a + qty, 0)
 
-  // ── Filter by category ────────────────────────────────────
-  const filtered = activeCategory === 'All'
-    ? menuItems
-    : menuItems.filter(m => m.category === activeCategory)
+  // ── Filter by category + search ──────────────────────────
+  const filtered = menuItems.filter(m => {
+    const matchCat    = activeCategory === 'All' || m.category === activeCategory
+    const matchSearch = search.trim() === '' ||
+      m.name.toLowerCase().includes(search.toLowerCase()) ||
+      (m.description ?? '').toLowerCase().includes(search.toLowerCase())
+    return matchCat && matchSearch
+  })
 
   // ── Order success ─────────────────────────────────────────
   if (ordered) {
@@ -664,8 +669,40 @@ export default function CustomerMenu() {
         </div>
       </div>
 
+      {/* ── Search bar ── */}
+      <div className="max-w-2xl mx-auto px-4 pt-4">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search menu…"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-cream-300 bg-white
+                       text-sm text-slate-800 placeholder-slate-400
+                       focus:outline-none focus:ring-2 focus:ring-terracotta-400
+                       focus:border-terracotta-400 transition-colors"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </div>
+        {search && (
+          <p className="text-xs text-slate-400 mt-1.5 px-1">
+            {filtered.length === 0
+              ? 'No items found'
+              : `${filtered.length} item${filtered.length > 1 ? 's' : ''} found`}
+          </p>
+        )}
+      </div>
+
       {/* ── Menu grid ── */}
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-4">
         {error && (
           <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 mb-4">
             <AlertCircle size={16} className="flex-shrink-0" />

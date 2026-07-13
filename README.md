@@ -10,6 +10,7 @@ A web-based ordering system for a traditional Indonesian restaurant. Customers s
 
 ### Customer Side (`/menu?table=X`)
 - Browse menu with photos, names, descriptions, and prices
+- Search menu by name or description with live result count and clear button
 - Filter by category: All / Food / Drink / Dessert
 - Add items to cart with per-item quantity control
 - Per-item notes (e.g. "no spice", "no onion")
