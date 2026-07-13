@@ -1,0 +1,170 @@
+================================================================
+  PRODUCT REQUIREMENTS DOCUMENT (PRD)
+  Heritage Nusantara – Smart Dining System
+  Version : 1.0
+  Date    : July 2026
+================================================================
+
+----------------------------------------------------------------
+1. OVERVIEW
+----------------------------------------------------------------
+Heritage Nusantara adalah sistem pemesanan makanan berbasis web
+untuk restoran dengan konsep masakan tradisional Indonesia.
+Sistem ini menggantikan proses pemesanan manual dengan alur
+digital end-to-end: dari pelanggan scan QR di meja, memilih
+menu, memesan, hingga admin memproses dan menutup tagihan.
+
+Tagline : "Timeless Flavors, Modern Convenience."
+
+----------------------------------------------------------------
+2. TUJUAN PRODUK
+----------------------------------------------------------------
+- Mempercepat proses pemesanan tanpa perlu memanggil pelayan.
+- Memberikan visibilitas real-time kepada dapur atas status
+  setiap order.
+- Menyediakan laporan keuangan otomatis berdasarkan transaksi
+  yang telah selesai.
+- Mengurangi kesalahan pencatatan order secara manual.
+
+----------------------------------------------------------------
+3. PENGGUNA
+----------------------------------------------------------------
+A. Pelanggan (Customer)
+   - Mengakses menu via QR code di meja.
+   - Tidak perlu login atau membuat akun.
+   - Dapat memesan, menambahkan catatan per item, melihat
+     status pesanan, dan meminta tagihan.
+
+B. Admin / Staf Restoran
+   - Login dengan username dan password.
+   - Mengelola menu, meja, memantau order, dan melihat laporan.
+
+----------------------------------------------------------------
+4. FITUR UTAMA
+----------------------------------------------------------------
+
+4.1 CUSTOMER SIDE (/menu?table=X)
+------------------------------------
+- Tampilan menu dengan foto, nama, deskripsi, dan harga.
+- Filter kategori: All / Food / Drink / Dessert.
+- Tambah item ke keranjang dengan kontrol qty per item.
+- Catatan (note) per item (contoh: "tidak pedas", "no onion").
+- Cart drawer: review pesanan sebelum submit.
+- Submit order → tersimpan di tabel `orders` Supabase.
+- Order Status drawer:
+  - Menampilkan semua order aktif untuk meja tersebut.
+  - Status real-time: Pending / Cooking / Served.
+  - Payment status: Unpaid / Bill Requested / Paid.
+  - Tombol "Request Bill" muncul saat semua order Served
+    (satu tombol untuk semua order meja, bukan per order).
+  - Update otomatis via Supabase Realtime.
+- Layar konfirmasi setelah order berhasil dikirim.
+
+4.2 ADMIN SIDE (/)
+------------------------------------
+4.2.1 Login
+  - Form login dengan username dan password.
+  - Password default: admin123
+  - Autentikasi via SHA-256 hash yang disimpan di Supabase
+    tabel `admin_settings`.
+  - Session tersimpan di sessionStorage (hilang saat tab
+    ditutup).
+  - Opsi ganti password dari sidebar atau dropdown header.
+  - Tombol Sign Out.
+
+4.2.2 Order Monitor
+  - Tampilan grid semua order aktif secara real-time.
+  - Filter: All / Pending / Cooking / Served /
+    Payment Requested.
+  - Ubah status order (Pending → Cooking → Served).
+  - Notifikasi visual jika pelanggan request bill.
+  - Konfirmasi pembayaran & Close Bill:
+    → Order diarsipkan ke tabel `order_history`.
+    → Order dihapus dari tabel `orders`.
+
+4.2.3 Menu Management
+  - CRUD item menu (nama, deskripsi, kategori, harga, foto).
+  - Upload foto ke Supabase Storage (bucket: menu-images).
+  - Toggle ketersediaan (available / out of stock).
+  - Filter dan search menu.
+  - Foto lama otomatis dihapus dari storage saat item
+    diedit atau dihapus.
+
+4.2.4 Table & QR Management
+  - Tambah dan hapus nomor meja.
+  - Generate QR code per meja (URL: /menu?table=X).
+  - Preview dan cetak QR code.
+
+4.2.5 Financial Report
+  - Data diambil dari tabel `order_history` (bukan orders aktif).
+  - Stat cards: Revenue Hari Ini, Total Revenue, Peak Hour.
+  - Peak Hour: jam tersibuk berdasarkan waktu close bill hari ini.
+  - Bar chart: Revenue per jam (today) atau per hari (7 hari).
+  - Tabel transaction history lengkap.
+
+----------------------------------------------------------------
+5. ARSITEKTUR TEKNIS
+----------------------------------------------------------------
+Frontend  : React 18 + Vite 5
+Styling   : Tailwind CSS 3 + custom design tokens
+Database  : Supabase (PostgreSQL)
+Storage   : Supabase Storage
+Realtime  : Supabase Realtime (Postgres Changes)
+Routing   : React Router DOM v6
+Charts    : Recharts
+Icons     : Lucide React
+Fonts     : Playfair Display (serif) + Inter (sans)
+
+----------------------------------------------------------------
+6. STRUKTUR DATABASE
+----------------------------------------------------------------
+Tabel              Keterangan
+-----------------  -------------------------------------------
+menus              Item menu (nama, harga, foto, kategori)
+tables             Nomor meja yang terdaftar
+orders             Order aktif (belum close bill)
+order_history      Arsip order yang sudah close bill
+admin_settings     Kredensial admin (username, password_hash)
+
+----------------------------------------------------------------
+7. ALUR UTAMA (HAPPY PATH)
+----------------------------------------------------------------
+1. Admin setup meja → QR code dicetak dan dipasang di meja.
+2. Pelanggan scan QR → buka /menu?table=X di browser.
+3. Pelanggan pilih menu, isi catatan, submit order.
+4. Admin lihat order baru di Order Monitor (Pending).
+5. Admin ubah status → Cooking (dapur mulai masak).
+6. Admin ubah status → Served (makanan disajikan).
+7. Pelanggan buka Order Status → klik "Request Bill".
+8. Admin terima notifikasi bill requested di Order Monitor.
+9. Admin klik "Confirm Payment & Close Bill".
+10. Order pindah ke order_history, laporan keuangan terupdate.
+
+----------------------------------------------------------------
+8. BATASAN & CATATAN
+----------------------------------------------------------------
+- Autentikasi admin menggunakan SHA-256 client-side, bukan
+  Supabase Auth. Cukup untuk kebutuhan internal restoran kecil.
+  Untuk produksi skala besar, disarankan migrasi ke Supabase
+  Auth dengan JWT.
+- Tidak ada notifikasi push/email; admin harus aktif memantau
+  Order Monitor.
+- Satu order = satu submit dari pelanggan. Jika pelanggan
+  ingin tambah menu, mereka submit order baru (muncul sebagai
+  order terpisah di meja yang sama).
+- Foto menu: maksimal 2MB, format PNG/JPG/WEBP.
+
+----------------------------------------------------------------
+9. RENCANA PENGEMBANGAN SELANJUTNYA (BACKLOG)
+----------------------------------------------------------------
+- [ ] Notifikasi browser (Web Push) untuk order baru.
+- [ ] Multi-language support (ID / EN toggle).
+- [ ] Export laporan keuangan ke PDF/Excel.
+- [ ] Riwayat ganti password admin.
+- [ ] Mode printer receipt (thermal printer support).
+- [ ] Manajemen stok bahan baku.
+- [ ] Integrasi payment gateway (QRIS/virtual account).
+
+================================================================
+  END OF DOCUMENT
+================================================================
