@@ -36,11 +36,11 @@ export default function AdminLayout({ activePage, onNavigate, onLogout, children
       {/* ── Sidebar ── */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 z-30 flex flex-col
+          fixed top-0 left-0 min-h-screen h-full w-64 z-30 flex flex-col
           bg-slate-900 text-white shadow-xl
           transform transition-transform duration-300
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:relative lg:translate-x-0 lg:flex
+          lg:sticky lg:top-0 lg:self-stretch lg:translate-x-0 lg:flex
         `}
       >
         {/* Brand */}
